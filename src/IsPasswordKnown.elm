@@ -1,4 +1,4 @@
-module IsPasswordKnown exposing (IsPasswordKnown(..), Msg(..), PotentialMatch, numberOfDigitsToSend, parseResponse, pawnedPasswordAPI, responseParser, send)
+module IsPasswordKnown exposing (IsPasswordKnown(..), createRequest, isPasswordKnown)
 
 import Http
 import Parser exposing ((|.), (|=))
@@ -13,15 +13,6 @@ numberOfDigitsToSend =
     5
 
 
-type Msg
-    = LoadPotentialMatches (Result Http.Error String)
-
-
-send : String -> Cmd Msg
-send password =
-    Http.send LoadPotentialMatches (createRequest password)
-
-
 createRequest password =
     password
         |> SHA1.fromString
@@ -31,8 +22,8 @@ createRequest password =
         |> Http.getString
 
 
-isPasswordKnown : String -> List PotentialMatch -> IsPasswordKnown
-isPasswordKnown password potentialMatches =
+isPasswordKnown : String -> String -> IsPasswordKnown
+isPasswordKnown password responseString =
     List.foldl
         (\currentElement aggregate ->
             case aggregate of
@@ -43,7 +34,7 @@ isPasswordKnown password potentialMatches =
                     isItMatch password currentElement
         )
         PasswordUnknown
-        potentialMatches
+        (parseResponse responseString)
 
 
 isItMatch : String -> PotentialMatch -> IsPasswordKnown
@@ -55,7 +46,7 @@ isItMatch password potentialMatch =
                 |> SHA1.toHex
                 |> String.dropLeft numberOfDigitsToSend
     in
-    case remainingPasswordHash == potentialMatch.hash of
+    case String.toLower remainingPasswordHash == String.toLower potentialMatch.hash of
         True ->
             PasswordMatchedTimes potentialMatch.ocurrences
 
@@ -81,7 +72,7 @@ responseParser : Parser.Parser (List PotentialMatch)
 responseParser =
     Parser.sequence
         { start = ""
-        , separator = "/n"
+        , separator = ""
         , end = ""
         , spaces = Parser.spaces
         , item = potentialMatchParser
