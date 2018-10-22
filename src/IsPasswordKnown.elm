@@ -1,4 +1,4 @@
-module IsPasswordKnown exposing (IsPasswordKnown(..), createRequest, isPasswordKnown)
+module IsPasswordKnown exposing (IsPasswordKnown(..), hashAndCut, isPasswordKnown, requestPossibleMatches)
 
 import Http
 import Parser exposing ((|.), (|=))
@@ -13,13 +13,28 @@ numberOfDigitsToSend =
     5
 
 
-createRequest password =
+type Password
+    = Password String
+
+
+hashAndCut password =
     password
         |> SHA1.fromString
         |> SHA1.toHex
         |> String.left numberOfDigitsToSend
-        |> String.append pawnedPasswordAPI
-        |> Http.getString
+        |> Password
+
+
+requestPossibleMatches password =
+    case password of
+        Password pass ->
+            pass
+                |> String.append pawnedPasswordAPI
+                |> Http.getString
+
+
+
+-- Response
 
 
 isPasswordKnown : String -> String -> IsPasswordKnown
@@ -27,18 +42,18 @@ isPasswordKnown password responseString =
     List.foldl
         (\currentElement aggregate ->
             case aggregate of
-                PasswordMatchedTimes _ ->
+                FoundInBreachedDataTimes _ ->
                     aggregate
 
                 PasswordUnknown ->
-                    isItMatch password currentElement
+                    doesItMatch password currentElement
         )
         PasswordUnknown
         (parseResponse responseString)
 
 
-isItMatch : String -> PotentialMatch -> IsPasswordKnown
-isItMatch password potentialMatch =
+doesItMatch : String -> PotentialMatch -> IsPasswordKnown
+doesItMatch password potentialMatch =
     let
         remainingPasswordHash =
             password
@@ -46,9 +61,12 @@ isItMatch password potentialMatch =
                 |> SHA1.toHex
                 |> String.dropLeft numberOfDigitsToSend
     in
-    case String.toLower remainingPasswordHash == String.toLower potentialMatch.hash of
+    case
+        String.toLower remainingPasswordHash
+            == String.toLower potentialMatch.hash
+    of
         True ->
-            PasswordMatchedTimes potentialMatch.ocurrences
+            FoundInBreachedDataTimes potentialMatch.ocurrences
 
         False ->
             PasswordUnknown
@@ -94,4 +112,4 @@ potentialMatchParser =
 
 type IsPasswordKnown
     = PasswordUnknown
-    | PasswordMatchedTimes Int
+    | FoundInBreachedDataTimes Int

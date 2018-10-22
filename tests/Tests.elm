@@ -12,7 +12,7 @@ suite =
         [ describe "parseResponse"
             [ test "finds one correct entry for one response" <|
                 \_ ->
-                    Expect.equal (PasswordMatchedTimes 1)
+                    Expect.equal (FoundInBreachedDataTimes 1)
                         (isPasswordKnown
                             "pass"
                             "e23bd5b727046a9e3b4b7db57bd8d6ee684:1"
@@ -27,7 +27,7 @@ suite =
         , test "finds match in cached real response" <|
             \_ ->
                 Expect.equal
-                    (PasswordMatchedTimes 514780)
+                    (FoundInBreachedDataTimes 514780)
                     (isPasswordKnown "asdfghjkl" answer_for_asdfghjkl)
         ]
 
