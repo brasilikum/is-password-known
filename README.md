@@ -1,6 +1,6 @@
 # Is this password known?
 
-This elm package checks a given password against the API of haveibeenpwned.com.
+This elm package checks a given password against the public API of haveibeenpwned.com
 
 ## Usage
 

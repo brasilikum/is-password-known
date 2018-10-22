@@ -12,23 +12,23 @@ suite =
         [ describe "parseResponse"
             [ test "finds one correct entry for one response" <|
                 \_ ->
-                    Expect.equal (FoundInBreachedDataTimes 1)
+                    Expect.equal (Ok (FoundInBreachedDataTimes 1))
                         (isPasswordKnown
                             "pass"
-                            "e23bd5b727046a9e3b4b7db57bd8d6ee684:1"
+                            (Ok "e23bd5b727046a9e3b4b7db57bd8d6ee684:1")
                         )
             , test "does not find on randomly non matching strings" <|
                 \_ ->
                     Expect.equal
-                        PasswordUnknown
-                        (isPasswordKnown "asdfdf" """00169791E84389EFBAA05C2EAE449D45D00:1
-01BC5A02D8F0DDA6DB019ACDD3F36051F7F:1""")
+                        (Ok PasswordUnknown)
+                        (isPasswordKnown "asdfdf" (Ok """00169791E84389EFBAA05C2EAE449D45D00:1
+01BC5A02D8F0DDA6DB019ACDD3F36051F7F:1"""))
             ]
         , test "finds match in cached real response" <|
             \_ ->
                 Expect.equal
-                    (FoundInBreachedDataTimes 514780)
-                    (isPasswordKnown "asdfghjkl" answer_for_asdfghjkl)
+                    (Ok (FoundInBreachedDataTimes 514780))
+                    (isPasswordKnown "asdfghjkl" (Ok answer_for_asdfghjkl))
         ]
 
 
